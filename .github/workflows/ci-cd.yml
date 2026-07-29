@@ -1,0 +1,66 @@
+name: CI/CD Pipeline - GHCR Docker Build
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+# Permisos explícitos para lectura de código y publicación de paquetes en GHCR
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    name: Build & Push Image to GHCR
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Clonar el código fuente
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      # 2. Configurar Java 17 para validación y compilación de prueba
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # 3. Compilar el proyecto con Maven para asegurar que los tests pasen
+      - name: Compilar y ejecutar pruebas unitarias
+        run: ./mvnw clean test
+
+      # 4. Iniciar sesión en GitHub Container Registry
+      - name: Autenticar en GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5. Generar etiquetas dinámicas (latest + Hash del Commit)
+      - name: Generar Metadatos de Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      # 6. Configurar motor de construcción Docker Buildx
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 7. Compilar la imagen usando el Dockerfile y subirla a GHCR
+      - name: Construir y publicar imagen Docker
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
