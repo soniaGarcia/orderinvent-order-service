@@ -25,7 +25,16 @@ management:
         include: health, info, metrics, prometheus
   endpoint:
     health:
-      show-details: always
+      show-details: always  # Muestra el estado de DB, Kafka y espacio en disco
+      probes:
+        enabled: true       # Habilita liveness y readiness (clave para AWS ECS)
+  tracing:
+    sampling:
+      probability: 1.0      # Captura el 100% de las trazas (ideal para POC/Dev)
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
 
 springdoc:
   api-docs:
