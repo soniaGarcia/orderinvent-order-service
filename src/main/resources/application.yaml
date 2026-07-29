@@ -18,6 +18,21 @@ spring:
     compatibility-verifier:
       enabled: false
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 inventory:
   service:
     url: http://localhost:8081/api/v1/inventory # URL del microservicio de inventario
