@@ -45,7 +45,7 @@ public class OrderService {
         if (request.getItems() != null) {
             for (OrderItemRequest itemReq : request.getItems()) {
                 OrderItem item = OrderItem.builder()
-                        .productId(itemReq.getProductId())
+                        .productCode(itemReq.getProductCode())
                         .quantity(itemReq.getQuantity())
                         .build();
                 order.addItem(item);
@@ -99,7 +99,7 @@ public class OrderService {
         if (request.getItems() != null) {
             for (OrderItemRequest itemReq : request.getItems()) {
                 OrderItem item = OrderItem.builder()
-                        .productId(itemReq.getProductId())
+                        .productCode(itemReq.getProductCode())
                         .quantity(itemReq.getQuantity())
                         .build();
                 order.addItem(item);
@@ -129,7 +129,7 @@ public class OrderService {
                 order.getItems().stream()
                         .map(item -> OrderItemResponse.builder()
                                 .id(item.getId())
-                                .productId(item.getProductId())
+                                .productCode(item.getProductCode())
                                 .quantity(item.getQuantity())
                                 .build())
                         .collect(Collectors.toList()) : Collections.emptyList();

@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrderItemResponse {
     private Long id;
-    private String productId;
+    private String productCode;
     private Integer quantity;
 }
