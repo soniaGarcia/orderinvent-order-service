@@ -5,12 +5,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class DeductStockRequest {
-    private List<OrderItemRequest> items;
+@AllArgsConstructor
+public class OrderItemResponse {
+    private Long id;
+    private String productId;
+    private Integer quantity;
 }

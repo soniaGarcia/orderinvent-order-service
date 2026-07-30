@@ -1,12 +1,14 @@
 package com.exam.order.dto;
 
-import jakarta.validation.constraints.Min;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
@@ -17,10 +19,7 @@ public class OrderRequest {
     @NotBlank(message = "El ID del cliente es obligatorio")
     private String customerId;
 
-    @NotBlank(message = "El ID del producto es obligatorio")
-    private String productId;
-
-    @NotNull(message = "La cantidad no puede ser nula")
-    @Min(value = 1, message = "La cantidad debe ser al menos 1")
-    private Integer quantity;
+    @NotEmpty(message = "La lista de ítems no puede estar vacía")
+    @Valid
+    private List<OrderItemRequest> items;
 }

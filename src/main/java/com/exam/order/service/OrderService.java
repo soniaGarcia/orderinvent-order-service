@@ -1,10 +1,9 @@
 package com.exam.order.service;
 
-import com.exam.order.dto.DeductStockRequest;
-import com.exam.order.dto.OrderRequest;
-import com.exam.order.dto.OrderResponse;
+import com.exam.order.dto.*;
 import com.exam.order.exception.ResourceNotFoundException;
 import com.exam.order.model.Order;
+import com.exam.order.model.OrderItem;
 import com.exam.order.model.OrderStatus;
 import com.exam.order.repository.OrderRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
@@ -14,6 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,14 +38,24 @@ public class OrderService {
 
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
-                .productId(request.getProductId())
-                .quantity(request.getQuantity())
                 .status(OrderStatus.PENDING)
+                .items(new ArrayList<>())
                 .build();
+
+        if (request.getItems() != null) {
+            for (OrderItemRequest itemReq : request.getItems()) {
+                OrderItem item = OrderItem.builder()
+                        .productId(itemReq.getProductId())
+                        .quantity(itemReq.getQuantity())
+                        .build();
+                order.addItem(item);
+            }
+        }
+
         order = orderRepository.save(order);
 
-        DeductStockRequest stockRequest = new DeductStockRequest(request.getProductId(), request.getQuantity());
-        
+        DeductStockRequest stockRequest = new DeductStockRequest(request.getItems());
+
         log.info("Consultando stock a Inventory Service: {}", inventoryServiceUrl + "/deduct");
         Boolean isStockDeducted = restTemplate.postForObject(
                 inventoryServiceUrl + "/deduct", stockRequest, Boolean.class);
@@ -77,11 +91,21 @@ public class OrderService {
 
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
-                .productId(request.getProductId())
-                .quantity(request.getQuantity())
                 .status(OrderStatus.PENDING)
                 .rejectReason("Inventory Service no disponible. Verificación diferida.")
+                .items(new ArrayList<>())
                 .build();
+
+        if (request.getItems() != null) {
+            for (OrderItemRequest itemReq : request.getItems()) {
+                OrderItem item = OrderItem.builder()
+                        .productId(itemReq.getProductId())
+                        .quantity(itemReq.getQuantity())
+                        .build();
+                order.addItem(item);
+            }
+        }
+
         order = orderRepository.save(order);
 
         kafkaProducerService.sendOrderEvent(
@@ -101,11 +125,19 @@ public class OrderService {
     }
 
     private OrderResponse mapToResponse(Order order) {
+        List<OrderItemResponse> itemResponses = order.getItems() != null ?
+                order.getItems().stream()
+                        .map(item -> OrderItemResponse.builder()
+                                .id(item.getId())
+                                .productId(item.getProductId())
+                                .quantity(item.getQuantity())
+                                .build())
+                        .collect(Collectors.toList()) : Collections.emptyList();
+
         return OrderResponse.builder()
                 .orderId(order.getId())
                 .customerId(order.getCustomerId())
-                .productId(order.getProductId())
-                .quantity(order.getQuantity())
+                .items(itemResponses)
                 .status(order.getStatus().name())
                 .rejectReason(order.getRejectReason())
                 .createdAt(order.getCreatedAt())
