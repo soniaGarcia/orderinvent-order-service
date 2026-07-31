@@ -4,7 +4,7 @@ Microservicio encargado de la gestión del ciclo de vida de las órdenes de comp
 
 ## 🚀 Tecnologías
 * **Runtime:** Java 17 / Spring Boot 3.x
-* **Base de Datos:** PostgreSQL (Aurora Serverless v2)
+* **Base de Datos:** H2
 * **Mensajería:** Apache Kafka
 * **Resiliencia:** Resilience4j (Circuit Breaker & Fallback)
 * **Observabilidad:** Micrometer Tracing + Prometheus/CloudWatch
