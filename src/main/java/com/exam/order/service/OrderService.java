@@ -38,7 +38,7 @@ public class OrderService {
 
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
-                .status(OrderStatus.PENDING)
+                .status(OrderStatus.PENDIENTE)
                 .items(new ArrayList<>())
                 .build();
 
@@ -61,7 +61,7 @@ public class OrderService {
                 inventoryServiceUrl + "/deduct", stockRequest, Boolean.class);
 
         if (Boolean.TRUE.equals(isStockDeducted)) {
-            order.setStatus(OrderStatus.CONFIRMED);
+            order.setStatus(OrderStatus.CONFIRMADO);
             orderRepository.save(order);
             log.info("Pedido {} CONFIRMADO.", order.getId());
 
@@ -71,14 +71,14 @@ public class OrderService {
                 "Pedido confirmado y stock descontado."
             );
         } else {
-            order.setStatus(OrderStatus.REJECTED);
+            order.setStatus(OrderStatus.RECHAZADO);
             order.setRejectReason("Stock insuficiente");
             orderRepository.save(order);
             log.warn("Pedido {} RECHAZADO por falta de stock.", order.getId());
 
             kafkaProducerService.sendOrderEvent(
                 order.getId().toString(), 
-                OrderStatus.REJECTED.name(), 
+                OrderStatus.RECHAZADO.name(), 
                 "Stock insuficiente."
             );
         }
@@ -91,7 +91,7 @@ public class OrderService {
 
         Order order = Order.builder()
                 .customerId(request.getCustomerId())
-                .status(OrderStatus.PENDING)
+                .status(OrderStatus.PENDIENTE)
                 .rejectReason("Inventory Service no disponible. Verificación diferida.")
                 .items(new ArrayList<>())
                 .build();
@@ -110,8 +110,8 @@ public class OrderService {
 
         kafkaProducerService.sendOrderEvent(
             order.getId().toString(), 
-            OrderStatus.PENDING.name(), 
-            "Pedido guardado en estado PENDING por falla remota."
+            OrderStatus.PENDIENTE.name(), 
+            "Pedido guardado en estado PENDIENTE por falla remota."
         );
 
         return mapToResponse(order);
