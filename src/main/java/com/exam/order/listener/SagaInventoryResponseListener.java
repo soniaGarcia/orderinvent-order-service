@@ -1,5 +1,7 @@
 package com.exam.order.listener;
 
+import com.exam.order.dto.OrderEvent;
+import com.exam.order.dto.OrderItemRequest;
 import com.exam.order.model.Order;
 import com.exam.order.model.OrderStatus;
 import com.exam.order.repository.OrderRepository;
@@ -11,6 +13,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -34,16 +40,24 @@ public class SagaInventoryResponseListener {
                 return; // Ignorar si la orden ya fue procesada o no existe
             }
 
+            // Convertir entidades de ítems a DTO para el evento final
+            List<OrderItemRequest> itemRequests = order.getItems() != null ?
+                    order.getItems().stream()
+                            .map(item -> new OrderItemRequest(item.getProductCode(), item.getQuantity()))
+                            .collect(Collectors.toList()) : Collections.emptyList();
+
             if ("INVENTORY_SUCCESS".equalsIgnoreCase(status)) {
                 order.setStatus(OrderStatus.CONFIRMADO);
                 orderRepository.save(order);
 
-                // Notificar al tópico de notificaciones la confirmación final
-                kafkaProducerService.sendOrderEvent(
-                    order.getId().toString(),
-                    OrderStatus.CONFIRMADO.name(),
-                    "Orden reconciliada y confirmada exitosamente tras recuperación del servicio de inventario."
-                );
+                // Notificar confirmación final usando el DTO OrderEvent
+                kafkaProducerService.sendOrderEvent(OrderEvent.builder()
+                        .orderId(order.getId().toString())
+                        .status(OrderStatus.CONFIRMADO.name())
+                        .message("Orden reconciliada y confirmada exitosamente tras recuperación del servicio de inventario.")
+                        .items(itemRequests)
+                        .build());
+
                 log.info("Saga completada: Orden #{} actualizada a CONFIRMADO", orderId);
 
             } else {
@@ -51,11 +65,14 @@ public class SagaInventoryResponseListener {
                 order.setRejectReason("Stock insuficiente durante reconciliación asíncrona");
                 orderRepository.save(order);
 
-                kafkaProducerService.sendOrderEvent(
-                    order.getId().toString(),
-                    OrderStatus.RECHAZADO.name(),
-                    "Orden rechazada por falta de stock durante reconciliación de Saga."
-                );
+                // Notificar rechazo usando el DTO OrderEvent
+                kafkaProducerService.sendOrderEvent(OrderEvent.builder()
+                        .orderId(order.getId().toString())
+                        .status(OrderStatus.RECHAZADO.name())
+                        .message("Orden rechazada por falta de stock durante reconciliación de Saga.")
+                        .items(itemRequests)
+                        .build());
+
                 log.info("Saga completada: Orden #{} actualizada a RECHAZADO", orderId);
             }
 
