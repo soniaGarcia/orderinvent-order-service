@@ -67,7 +67,7 @@ public class OrderService {
 
             kafkaProducerService.sendOrderEvent(
                 order.getId().toString(), 
-                OrderStatus.CONFIRMED.name(), 
+                OrderStatus.CONFIRMADO.name(), 
                 "Pedido confirmado y stock descontado."
             );
         } else {
