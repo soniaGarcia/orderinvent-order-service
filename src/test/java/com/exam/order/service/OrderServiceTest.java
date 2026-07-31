@@ -1,6 +1,7 @@
 package com.exam.order.service;
 
 import com.exam.order.dto.DeductStockRequest;
+import com.exam.order.dto.OrderEvent;
 import com.exam.order.dto.OrderItemRequest;
 import com.exam.order.dto.OrderRequest;
 import com.exam.order.dto.OrderResponse;
@@ -66,8 +67,12 @@ class OrderServiceTest {
         assertNotNull(response);
         assertEquals(100L, response.getOrderId());
         assertEquals("CONFIRMADO", response.getStatus());
+        
+        // Verificación actualizada utilizando el DTO OrderEvent
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("100"), eq("CONFIRMADO"), anyString());
+                .sendOrderEvent(argThat(event -> 
+                    "100".equals(event.getOrderId()) && "CONFIRMADO".equals(event.getStatus())
+                ));
     }
 
     @Test
@@ -94,8 +99,12 @@ class OrderServiceTest {
         assertNotNull(response);
         assertEquals("RECHAZADO", response.getStatus());
         assertEquals("Stock insuficiente", response.getRejectReason());
+        
+        // Verificación actualizada utilizando el DTO OrderEvent
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("101"), eq("RECHAZADO"), anyString());
+                .sendOrderEvent(argThat(event -> 
+                    "101".equals(event.getOrderId()) && "RECHAZADO".equals(event.getStatus())
+                ));
     }
 
     @Test
@@ -118,8 +127,12 @@ class OrderServiceTest {
         assertNotNull(response);
         assertEquals("PENDIENTE", response.getStatus());
         assertTrue(response.getRejectReason().contains("Inventory Service no disponible"));
+        
+        // Verificación actualizada utilizando el DTO OrderEvent
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("102"), eq("PENDIENTE"), anyString());
+                .sendOrderEvent(argThat(event -> 
+                    "102".equals(event.getOrderId()) && "PENDIENTE".equals(event.getStatus())
+                ));
     }
 
     private OrderRequest buildSampleOrderRequest() {
