@@ -65,22 +65,24 @@ public class OrderService {
             orderRepository.save(order);
             log.info("Pedido {} CONFIRMADO.", order.getId());
 
-            kafkaProducerService.sendOrderEvent(
-                order.getId().toString(), 
-                OrderStatus.CONFIRMADO.name(), 
-                "Pedido confirmado y stock descontado."
-            );
+            kafkaProducerService.sendOrderEvent(OrderEvent.builder()
+                    .orderId(order.getId().toString())
+                    .status(OrderStatus.CONFIRMADO.name())
+                    .message("Pedido confirmado y stock descontado.")
+                    .items(request.getItems())
+                    .build());
         } else {
             order.setStatus(OrderStatus.RECHAZADO);
             order.setRejectReason("Stock insuficiente");
             orderRepository.save(order);
             log.warn("Pedido {} RECHAZADO por falta de stock.", order.getId());
 
-            kafkaProducerService.sendOrderEvent(
-                order.getId().toString(), 
-                OrderStatus.RECHAZADO.name(), 
-                "Stock insuficiente."
-            );
+            kafkaProducerService.sendOrderEvent(OrderEvent.builder()
+                    .orderId(order.getId().toString())
+                    .status(OrderStatus.RECHAZADO.name())
+                    .message("Stock insuficiente.")
+                    .items(request.getItems())
+                    .build());
         }
 
         return mapToResponse(order);
@@ -108,11 +110,13 @@ public class OrderService {
 
         order = orderRepository.save(order);
 
-        kafkaProducerService.sendOrderEvent(
-            order.getId().toString(), 
-            OrderStatus.PENDIENTE.name(), 
-            "Pedido guardado en estado PENDIENTE por falla remota."
-        );
+        // AQUÍ ESTÁ LA CORRECCIÓN: Ahora incluimos request.getItems() en el evento diferido
+        kafkaProducerService.sendOrderEvent(OrderEvent.builder()
+                .orderId(order.getId().toString())
+                .status(OrderStatus.PENDIENTE.name())
+                .message("Pedido guardado en estado PENDIENTE por falla remota.")
+                .items(request.getItems())
+                .build());
 
         return mapToResponse(order);
     }
