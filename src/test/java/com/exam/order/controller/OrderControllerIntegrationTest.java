@@ -55,6 +55,6 @@ class OrderControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.orderId").exists())
                 .andExpect(jsonPath("$.customerId").value("CLI-INTEGRATION"))
-                .andExpect(jsonPath("$.status").value("CONFIRMED"));
+                .andExpect(jsonPath("$.status").value("CONFIRMADO"));
     }
 }

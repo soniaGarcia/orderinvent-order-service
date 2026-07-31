@@ -65,9 +65,9 @@ class OrderServiceTest {
         // Assert
         assertNotNull(response);
         assertEquals(100L, response.getOrderId());
-        assertEquals("CONFIRMED", response.getStatus());
+        assertEquals("CONFIRMADO", response.getStatus());
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("100"), eq("CONFIRMED"), anyString());
+                .sendOrderEvent(eq("100"), eq("CONFIRMADO"), anyString());
     }
 
     @Test
@@ -92,14 +92,14 @@ class OrderServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("REJECTED", response.getStatus());
+        assertEquals("RECHAZADO", response.getStatus());
         assertEquals("Stock insuficiente", response.getRejectReason());
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("101"), eq("REJECTED"), anyString());
+                .sendOrderEvent(eq("101"), eq("RECHAZADO"), anyString());
     }
 
     @Test
-    @DisplayName("Debe ejecutar el Fallback y dejar la orden en PENDING si falla la llamada remota")
+    @DisplayName("Debe ejecutar el Fallback y dejar la orden en PENDIENTE si falla la llamada remota")
     void createOrderFallback_ShouldSetStatusToPending() {
         // Arrange
         OrderRequest request = buildSampleOrderRequest();
@@ -116,10 +116,10 @@ class OrderServiceTest {
 
         // Assert
         assertNotNull(response);
-        assertEquals("PENDING", response.getStatus());
+        assertEquals("PENDIENTE", response.getStatus());
         assertTrue(response.getRejectReason().contains("Inventory Service no disponible"));
         verify(kafkaProducerService, times(1))
-                .sendOrderEvent(eq("102"), eq("PENDING"), anyString());
+                .sendOrderEvent(eq("102"), eq("PENDIENTE"), anyString());
     }
 
     private OrderRequest buildSampleOrderRequest() {
