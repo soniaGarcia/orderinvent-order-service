@@ -3,7 +3,7 @@
 Microservicio encargado de la gestión del ciclo de vida de las órdenes de compra. Actúa como el orquestador principal del flujo de entrada y coordina la validación de inventario síncrona (REST) y la reconciliación asíncrona (Saga vía Kafka).
 
 ## 🚀 Tecnologías
-* **Runtime:** Java 21 / Spring Boot 3.x
+* **Runtime:** Java 17 / Spring Boot 3.x
 * **Base de Datos:** PostgreSQL (Aurora Serverless v2)
 * **Mensajería:** Apache Kafka
 * **Resiliencia:** Resilience4j (Circuit Breaker & Fallback)
