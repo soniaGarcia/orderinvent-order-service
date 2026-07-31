@@ -11,18 +11,17 @@ Microservicio encargado de la gestión del ciclo de vida de las órdenes de comp
 
 ## ⚙️ Puerto y Endpoints
 * **Puerto Local:** `8080`
+* **Consola H2 (Dev):** `http://localhost:8080/h2-console` (JDBC URL: `jdbc:h2:mem:order_db`)
 * **Endpoints HTTP:**
-  * `POST /api/v1/orders` - Creación de pedido (Atómico).
-  * `GET /api/v1/orders/{id}` - Consulta de estado del pedido.
-  * `GET /actuator/health/readiness` - Health Check ALB/K8s.
+  * `POST /api/v1/orders` - Creación de pedido.
+  * `GET /api/v1/orders/{id}` - Consulta de estado.
+  * `GET /actuator/health/readiness` - Health Check.
 
-## 🔄 Integración de Eventos (Kafka)
-* **Productor:** `order-events` (Publica estados: `PENDING`, `CONFIRMED`, `REJECTED`).
-* **Consumidor:** `inventory-events` (Recibe confirmaciones o fallos de stock diferidos).
-
-## 🛠️ Variables de Entorno Clave
+## 🛠️ Variables de Entorno Clave (Perfil `local`)
 ```env
 SERVER_PORT=8080
-SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/order_db
+SPRING_PROFILES_ACTIVE=local
+SPRING_DATASOURCE_URL=jdbc:h2:mem:order_db
+SPRING_H2_CONSOLE_ENABLED=true
 SPRING_KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 INVENTORY_SERVICE_URL=http://localhost:8081
